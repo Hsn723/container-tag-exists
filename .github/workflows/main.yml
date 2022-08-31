@@ -1,0 +1,94 @@
+name: main
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '*'
+env:
+  go-version: 1.18
+  python-version: 3.x
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.go-version }}
+      - name: Lint
+        uses: pre-commit/action@v3.0.0
+        with:
+          extra_args: --all-files
+  check-goreleaser-config:
+    name: Check goreleaser.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.go-version }}
+      - uses: goreleaser/goreleaser-action@v3
+        with:
+          version: latest
+          args: check -f .goreleaser.yml
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.go-version }}
+      - name: Verify
+        run: make verify
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.go-version }}
+      - name: Test
+        run: make test
+  dry-run:
+    name: Dry-run release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: anchore/sbom-action/download-syft@v0.11.0
+      - name: Setup go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.go-version }}
+      - name: GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          version: latest
+          args: --snapshot --skip-sign --skip-publish --rm-dist
+  tag:
+    name: Tag release
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    needs: [lint, verify, check-goreleaser-config, test, dry-run]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT }}
+      - name: Tag release
+        run: |
+          TAG="v$(cat VERSION)"
+          git tag ${TAG}
+          git push origin ${TAG} || true

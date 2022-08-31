@@ -1,0 +1,15 @@
+linters:
+  enable:
+  - bodyclose
+  - contextcheck
+  - dupl
+  - gocognit
+  - goconst
+  - gocyclo
+  - godot
+  - gofmt
+  - gosec
+  - ifshort
+  - typecheck
+  - unconvert
+  - unparam
