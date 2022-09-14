@@ -27,12 +27,11 @@ type mockTransport struct {
 
 func (m *mockRegistry) init() {
 	r := mux.NewRouter()
-	r.HandleFunc("/v2/auth", func(w http.ResponseWriter, r *http.Request) {
+	handleToken := func(w http.ResponseWriter, r *http.Request) {
 		params := r.URL.Query()
-		repo := params.Get("service")
 		scope := params.Get("scope")
 		auth := r.Header.Get("Authorization")
-		if repo != m.server.Listener.Addr().String() || scope != m.scope || auth != fmt.Sprintf("Basic %s", m.basic) {
+		if scope != m.scope || auth != fmt.Sprintf("Basic %s", m.basic) {
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
@@ -47,7 +46,8 @@ func (m *mockRegistry) init() {
 		if _, err := w.Write(resp); err != nil {
 			m.t.Fatal(err)
 		}
-	})
+	}
+	r.HandleFunc("/token", handleToken)
 	r.HandleFunc("/v2/hsn723/hoge/manifests/{tag}", func(w http.ResponseWriter, r *http.Request) {
 		auth := r.Header.Get("Authorization")
 		if auth != fmt.Sprintf("Bearer %s", m.bearer) {

@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	authAPI     = "https://%s/v2/auth?service=%s&scope=repository:%s:pull"
+	quayAuthAPI = "https://%s/v2/auth?service=%s&scope=repository:%s:pull"
+	authAPI     = "https://%s/token?scope=repository:%s:pull"
 	manifestAPI = "https://%s/v2/%s/manifests/%s"
 )
 
@@ -48,7 +49,12 @@ func (r RegistryClient) retrieve(method, endpoint, auth string) (int, []byte, er
 }
 
 func (r RegistryClient) retrieveBearerToken(auth string) (string, error) {
-	endpoint := fmt.Sprintf(authAPI, r.RegistryURL, r.RegistryURL, r.ImagePath)
+	var endpoint string
+	if r.RegistryName == "QUAY_IO" {
+		endpoint = fmt.Sprintf(quayAuthAPI, r.RegistryURL, r.RegistryURL, r.ImagePath)
+	} else {
+		endpoint = fmt.Sprintf(authAPI, r.RegistryURL, r.ImagePath)
+	}
 	status, res, err := r.retrieve(http.MethodGet, endpoint, fmt.Sprintf("Basic %s", auth))
 	if err != nil {
 		return "", err
