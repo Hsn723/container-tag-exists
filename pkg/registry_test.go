@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	_ "embed"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,6 +11,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
+)
+
+var (
+	//go:embed t/sample.json
+	sampleManifest []byte
 )
 
 type mockRegistry struct {
@@ -493,6 +499,51 @@ func TestIsTagExist(t *testing.T) {
 			actual, err := client.IsTagExist(c.tag)
 			assertExpectedErr(t, err, c.isErr)
 			assert.Equal(t, c.expect, actual)
+		})
+	}
+}
+
+func TestHasPlatforms(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		title     string
+		platforms []string
+		response  []byte
+		expected  bool
+		isErr     bool
+	}{
+		{
+			title:     "SinglePlatform",
+			platforms: []string{"linux/amd64"},
+			response:  sampleManifest,
+			expected:  true,
+		},
+		{
+			title:     "MultiPlatform",
+			platforms: []string{"linux/amd64", "linux/arm64"},
+			response:  sampleManifest,
+			expected:  true,
+		},
+		{
+			title:     "MissingPlatform",
+			platforms: []string{"linux/amd64", "darwin/arm64"},
+			response:  sampleManifest,
+		},
+		{
+			title:     "UnmarshalError",
+			platforms: []string{"linux/amd64"},
+			response:  []byte("{hoge}"),
+			isErr:     true,
+		},
+	}
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.title, func(t *testing.T) {
+			t.Helper()
+			client := RegistryClient{Platforms: tc.platforms}
+			actual, err := client.hasPlatforms(tc.response)
+			assertExpectedErr(t, err, tc.isErr)
+			assert.Equal(t, tc.expected, actual)
 		})
 	}
 }

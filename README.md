@@ -14,10 +14,32 @@ go install github.com/Hsn723/container-tag-exists@latest
 ## Usage
 
 ```sh
-container-tag-exists IMAGE TAG
+Usage:
+  container-tag-exists IMAGE TAG [flags]
+  container-tag-exists [command]
+
+Available Commands:
+  completion  Generate the autocompletion script for the specified shell
+  help        Help about any command
+  version     show version
+
+Flags:
+  -h, --help               help for container-tag-exists
+  -p, --platform strings   specify platforms in the format os/arch to look for in container images. Default behavior is to look for any platform.
 ```
 
-If `IMAGE:TAG` exists, this simply outputs `found`. This is intended to be used in CI environments to automate checking for existing container images before pushing.
+If `IMAGE:TAG` exists, this simply outputs `found`. This is intended to be used in CI environments to automate checking for existing container images before pushing. By default, `container-tag-exists` looks for any existing container image with the given tag.
+
+```sh
+container-tag-exists ghcr.io/example 0.0.0
+```
+
+If you additionally need to check for specific platforms, specify platform strings, in the format `os/arch`, to check for.
+
+```sh
+container-tag-exists ghcr.io/example 0.0.0 -p linux/amd64,linux/arm64
+container-tag-exists ghcr.io/example 0.0.0 -p linux/amd64 -p linux/arm64
+```
 
 ## Configuration
 

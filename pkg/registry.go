@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 )
 
 var (
@@ -24,10 +25,24 @@ type RegistryClient struct {
 	RegistryURL  string
 	ImagePath    string
 	HttpClient   *http.Client
+	Platforms    []string
 }
 
 type tokenResponse struct {
 	Token string `json:"token"`
+}
+
+type manifestResponse struct {
+	Manifests []manifest `json:"manifests"`
+}
+
+type manifest struct {
+	Platform platform `json:"platform"`
+}
+
+type platform struct {
+	Architecture string `json:"architecture"`
+	Os           string `json:"os"`
 }
 
 func (r RegistryClient) retrieve(method, endpoint, auth string) (int, []byte, error) {
@@ -69,21 +84,51 @@ func (r RegistryClient) retrieveBearerToken(auth string) (string, error) {
 	return token.Token, nil
 }
 
+func (r RegistryClient) hasPlatform(platform string, manifests []manifest) bool {
+	for _, m := range manifests {
+		p := fmt.Sprintf("%s/%s", m.Platform.Os, m.Platform.Architecture)
+		if strings.EqualFold(p, platform) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r RegistryClient) hasPlatforms(res []byte) (bool, error) {
+	var manifests manifestResponse
+	if err := json.Unmarshal(res, &manifests); err != nil {
+		return false, err
+	}
+	for _, p := range r.Platforms {
+		if !r.hasPlatform(p, manifests.Manifests) {
+			return false, nil
+		}
+	}
+	return true, nil
+}
+
 func (r RegistryClient) checkManifestForTag(bearer, tag string) (bool, error) {
 	endpoint := fmt.Sprintf(manifestAPI, r.RegistryURL, r.ImagePath, tag)
 	auth := ""
 	if bearer != "" {
 		auth = fmt.Sprintf("Bearer %s", bearer)
 	}
-	status, _, err := r.retrieve(http.MethodHead, endpoint, auth)
+	method := http.MethodHead
+	if r.Platforms != nil {
+		method = http.MethodGet
+	}
+	status, res, err := r.retrieve(method, endpoint, auth)
 	if err != nil {
 		return false, err
 	}
-	if status == http.StatusOK {
-		return true, nil
-	}
 	if status == http.StatusNotFound {
 		return false, nil
+	}
+	if status == http.StatusOK {
+		if r.Platforms == nil {
+			return true, nil
+		}
+		return r.hasPlatforms(res)
 	}
 	return false, fmt.Errorf("unexpected response registry API: %d", status)
 }

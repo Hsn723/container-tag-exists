@@ -17,12 +17,15 @@ var (
 		Args:  cobra.ExactArgs(2),
 		RunE:  runRoot,
 	}
+
+	platforms []string
 )
 
 func init() {
 	_ = rootCmd.LocalFlags().MarkHidden("logfile")
 	_ = rootCmd.LocalFlags().MarkHidden("loglevel")
 	_ = rootCmd.LocalFlags().MarkHidden("logformat")
+	rootCmd.Flags().StringSliceVarP(&platforms, "platform", "p", nil, "specify platforms in the format os/arch to look for in container images. Default behavior is to look for any platform.")
 }
 
 func runRoot(cmd *cobra.Command, args []string) error {
@@ -45,6 +48,7 @@ func runRoot(cmd *cobra.Command, args []string) error {
 				TLSHandshakeTimeout: 10 * time.Second,
 			},
 		},
+		Platforms: platforms,
 	}
 	hasTag, err := registryClient.IsTagExist(args[1])
 	if err != nil {
