@@ -28,7 +28,7 @@ Flags:
   -p, --platform strings   specify platforms in the format os/arch to look for in container images. Default behavior is to look for any platform.
 ```
 
-If `IMAGE:TAG` exists, this simply outputs `found`. This is intended to be used in CI environments to automate checking for existing container images before pushing. By default, `container-tag-exists` looks for any existing container image with the given tag.
+If `IMAGE:TAG` exists, this simply writes `found` to standard output. This is intended to be used in CI environments to automate checking for existing container images before pushing. By default, `container-tag-exists` looks for any existing container image with the given tag.
 
 ```sh
 container-tag-exists ghcr.io/example 0.0.0

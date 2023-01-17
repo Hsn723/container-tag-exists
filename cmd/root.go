@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -55,7 +56,7 @@ func runRoot(cmd *cobra.Command, args []string) error {
 		return err
 	}
 	if hasTag {
-		cmd.Println("found")
+		fmt.Println("found")
 	}
 	return nil
 }
