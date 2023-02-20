@@ -45,12 +45,14 @@ type platform struct {
 	Os           string `json:"os"`
 }
 
-func (r RegistryClient) retrieve(method, endpoint, auth string) (int, []byte, error) {
+func (r RegistryClient) retrieve(method, endpoint string, headers map[string]string) (int, []byte, error) {
 	req, err := http.NewRequest(method, endpoint, nil)
 	if err != nil {
 		return -1, nil, err
 	}
-	req.Header.Add("Authorization", auth)
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
 	res, err := r.HttpClient.Do(req)
 	if err != nil {
 		return -1, nil, err
@@ -70,7 +72,10 @@ func (r RegistryClient) retrieveBearerToken(auth string) (string, error) {
 	} else {
 		endpoint = fmt.Sprintf(authAPI, r.RegistryURL, r.ImagePath)
 	}
-	status, res, err := r.retrieve(http.MethodGet, endpoint, fmt.Sprintf("Basic %s", auth))
+	headers := map[string]string{
+		"Authorization": fmt.Sprintf("Basic %s", auth),
+	}
+	status, res, err := r.retrieve(http.MethodGet, endpoint, headers)
 	if err != nil {
 		return "", err
 	}
@@ -109,15 +114,17 @@ func (r RegistryClient) hasPlatforms(res []byte) (bool, error) {
 
 func (r RegistryClient) checkManifestForTag(bearer, tag string) (bool, error) {
 	endpoint := fmt.Sprintf(manifestAPI, r.RegistryURL, r.ImagePath, tag)
-	auth := ""
+	headers := map[string]string{
+		"Accept": "application/vnd.oci.image.index.v1+json",
+	}
 	if bearer != "" {
-		auth = fmt.Sprintf("Bearer %s", bearer)
+		headers["Authorization"] = fmt.Sprintf("Bearer %s", bearer)
 	}
 	method := http.MethodHead
 	if r.Platforms != nil {
 		method = http.MethodGet
 	}
-	status, res, err := r.retrieve(method, endpoint, auth)
+	status, res, err := r.retrieve(method, endpoint, headers)
 	if err != nil {
 		return false, err
 	}
