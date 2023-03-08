@@ -77,7 +77,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v4
         with:
           version: latest
-          args: --snapshot --skip-sign --skip-publish --rm-dist
+          args: --snapshot --skip-sign --skip-publish --clean
   tag:
     name: Tag release
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
