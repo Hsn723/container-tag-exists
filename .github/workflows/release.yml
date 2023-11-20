@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: sigstore/cosign-installer@v3.2.0
-      - uses: anchore/sbom-action/download-syft@v0.14.3
+      - uses: anchore/sbom-action/download-syft@v0.15.0
       - name: Setup go
         uses: actions/setup-go@v4
         with:
