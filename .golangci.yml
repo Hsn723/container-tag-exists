@@ -9,7 +9,6 @@ linters:
   - godot
   - gofmt
   - gosec
-  - ifshort
   - typecheck
   - unconvert
   - unparam
