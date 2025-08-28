@@ -6,7 +6,7 @@ require (
 	github.com/cybozu-go/log v1.7.0
 	github.com/gorilla/mux v1.8.1
 	github.com/spf13/cobra v1.9.1
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require (
