@@ -2,18 +2,23 @@ name: main
 on:
   push:
     branches:
-      - '**'
+      - master
     tags-ignore:
       - '*'
+  pull_request:
+    branches:
+      - master
 env:
   go-version: stable
   python-version: 3.x
+permissions:
+  contents: read
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.python-version }}
@@ -29,7 +34,7 @@ jobs:
     name: Check goreleaser.yml
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup go
         uses: actions/setup-go@v6
         with:
@@ -42,7 +47,7 @@ jobs:
     name: Verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup go
         uses: actions/setup-go@v6
         with:
@@ -53,7 +58,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Setup go
         uses: actions/setup-go@v6
         with:
@@ -65,7 +70,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: anchore/sbom-action/download-syft@v0.21.1
@@ -78,17 +83,3 @@ jobs:
         with:
           version: latest
           args: --snapshot --skip=sign,publish --clean
-  tag:
-    name: Tag release
-    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    needs: [lint, verify, check-goreleaser-config, test, dry-run]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          token: ${{ secrets.PAT }}
-      - name: Tag release
-        run: |
-          TAG="v$(cat VERSION)"
-          git tag ${TAG}
-          git push origin ${TAG} || true
