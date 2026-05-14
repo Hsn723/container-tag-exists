@@ -3,6 +3,12 @@
 
 Check whether a container image with the given tag exists by querying the Registry API v2. In principle, any registry implementing the Docker Registry API v2 should be supported, but this has only been confirmed with `ghcr.io` and `quay.io`.
 
+## Project status
+
+The original motivation for this tool was to provide a way to check if a container image tag exists without needing to pull the entire image. Existing tools at the time had poor or non-existent support for handling manifests and metadata only, so pulling an entire image was the only way to check for existence or examine the image's metadata.
+
+Nowadays, mature and trustworthy tools like `oras`, `skopeo`, `crane`, etc. are readily available and actively improved upon. **This project is therefore no longer necessary and will enter maintenance mode after the immutable release of `v1.2.5`, after which the entire repository will be archived**.
+
 ## Installation
 
 Install from [releases](https://github.com/Hsn723/container-tag-exists/releases) or via `go install`
